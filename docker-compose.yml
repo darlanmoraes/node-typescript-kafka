@@ -1,0 +1,179 @@
+version: '2.1'
+services:
+  node-consumer-04:
+    build: ./node-consumer
+    ports:
+      - "4004:3000"
+    links: 
+      - mongo
+      - kafka
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/db
+      - KAFKA_URL=kafka:9092
+      - KAFKA_GROUP_ID=group-02
+      - KAFKA_CONSUMER_ID=consumer-04
+      - KAFKA_PARTITION=1
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget http://localhost:3000/status -O /dev/null || exit 1" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.17
+  node-consumer-03:
+    build: ./node-consumer
+    ports:
+      - "4003:3000"
+    links: 
+      - mongo
+      - kafka
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/db
+      - KAFKA_URL=kafka:9092
+      - KAFKA_GROUP_ID=group-02
+      - KAFKA_CONSUMER_ID=consumer-03
+      - KAFKA_PARTITION=0
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget http://localhost:3000/status -O /dev/null || exit 1" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.16
+  node-consumer-02:
+    build: ./node-consumer
+    ports:
+      - "4002:3000"
+    links: 
+      - mongo
+      - kafka
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/db
+      - KAFKA_URL=kafka:9092
+      - KAFKA_GROUP_ID=group-01
+      - KAFKA_CONSUMER_ID=consumer-02
+      - KAFKA_PARTITION=1
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget http://localhost:3000/status -O /dev/null || exit 1" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.15
+  node-consumer-01:
+    build: ./node-consumer
+    ports:
+      - "4001:3000"
+    links: 
+      - mongo
+      - kafka
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/db
+      - KAFKA_URL=kafka:9092
+      - KAFKA_GROUP_ID=group-01
+      - KAFKA_CONSUMER_ID=consumer-01
+      - KAFKA_PARTITION=0
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget http://localhost:3000/status -O /dev/null || exit 1" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.14
+  node-producer-01:
+    build: ./node-producer
+    ports:
+      - "3001:3000"
+    links: 
+      - mongo
+      - kafka
+    environment:
+      - MONGO_URL=mongodb://mongo:27017/db
+    depends_on:
+      mongo:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "wget http://localhost:3000/status -O /dev/null || exit 1" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.13
+  mongo:
+    image: "healthcheck/mongo"
+    mem_limit: 1024m
+    logging:
+      driver: none
+    healthcheck:
+      interval: 1s
+      retries: 10
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.12
+  zookeeper:
+    image: wurstmeister/zookeeper
+    ports:
+      - "2181"
+    healthcheck:
+      test: [ "CMD-SHELL", "/opt/zookeeper-3.4.9/bin/./zkServer.sh status || exit 1" ]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.11
+  kafka:
+    image: wurstmeister/kafka
+    ports:
+      - "9092"
+      - "6667"
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics.sh --zookeeper zookeeper:2181 --list | grep 'POSTS' || exit 1"]
+      interval: 1s
+      timeout: 5s
+      retries: 10
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.10
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_HOST_NAME: 10.5.0.10
+      KAFKA_CREATE_TOPICS: "POSTS:2:1"
+      KAFKA_ADVERTISED_PORT: 9092
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 10.5.0.0/16
+         gateway: 10.5.0.1
