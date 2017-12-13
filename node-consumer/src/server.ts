@@ -22,19 +22,23 @@ app.get('/status', (req, res) => {
 app.use(router);
 
 const kafka = properties.kafka;
-const client = new Kafka.KafkaClient({ kafkaHost: kafka.url });
-const consumer = new Kafka.Consumer(
-    client,
-    [ { topic: 'POSTS', partition: parseInt(kafka.partition) } ],
-    { autoCommit: false, groupId: kafka.groupId }
-);
+
+var options = {
+  kafkaHost: 'kafka:9092',
+  groupId: kafka.groupId,
+  sessionTimeout: 15000,
+  protocol: ['roundrobin'],
+  fromOffset: 'latest'
+};
+ 
+var consumer = new Kafka.ConsumerGroup(options, 'POSTS');
 
 consumer.on('message', (message) => {
   const _id = new mongodb.ObjectID();
   const post = new Post(Object.assign(JSON.parse(message.value), { _id }));
   service.create(post)
     .subscribe(
-      mdata => console.log(`(${kafka.groupId}/${kafka.partition}) Post created: ${post._id}`),
+      mdata => console.log(`(${kafka.groupId}/${message.partition}) Post created: ${post._id}`),
       error => console.error(`Can't create post.`, error)
     );
 });

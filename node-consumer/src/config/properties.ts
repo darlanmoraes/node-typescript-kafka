@@ -8,8 +8,6 @@ const envVarsSchema = joi.object({
   KAFKA_URL: joi.string()
     .required(),
   KAFKA_GROUP_ID: joi.string()
-    .required(),
-  KAFKA_PARTITION: joi.number()
     .required()
 }).unknown()
   .required();
@@ -30,7 +28,6 @@ export const properties = {
   },
   kafka: {
     url: envVars.KAFKA_URL,
-    groupId: envVars.KAFKA_GROUP_ID,
-    partition: envVars.KAFKA_PARTITION
+    groupId: envVars.KAFKA_GROUP_ID
   }
 };

@@ -19,7 +19,7 @@ interface IService {
 class Service implements IService {
   public stream(post: IPost): Observable<IPost> { 
     return Observable.create(observer => {
-      const partition = Math.floor(Math.random() * 2) + 0 ;
+      const partition = Math.floor(Math.random() * 4) + 0 ;
       const messages = JSON.stringify(post);
       const topic = 'POSTS';
       const payload = [ { topic, messages , partition } ];
