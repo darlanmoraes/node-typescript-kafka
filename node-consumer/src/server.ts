@@ -23,7 +23,7 @@ app.use(router);
 
 const kafka = properties.kafka;
 
-var options = {
+const options = {
   kafkaHost: 'kafka:9092',
   groupId: kafka.groupId,
   sessionTimeout: 15000,
@@ -31,9 +31,9 @@ var options = {
   fromOffset: 'latest'
 };
  
-var consumer = new Kafka.ConsumerGroup(options, 'POSTS');
+const consumer = new Kafka.ConsumerGroup(options, 'POSTS');
 
-consumer.on('message', (message) => {
+consumer.on('message', message => {
   const _id = new mongodb.ObjectID();
   const post = new Post(Object.assign(JSON.parse(message.value), { _id }));
   service.create(post)
